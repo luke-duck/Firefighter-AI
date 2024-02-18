@@ -9,6 +9,8 @@ pygame.init()
 pygame.key.set_repeat(200, 100)
 clock = pygame.time.Clock()
 running = True
+won = False
+lost = False
 
 width = 900
 height = 900
@@ -71,20 +73,20 @@ def check_bounds(start, index):
     return True
 
 # sin0 = 0 cos0 = 1, 
+burnt_arr = []
 
-def spread_fire(start_cell: Cell, cellIndex: int):
-    if start_cell.current_state != FireStatus.BURNED:
+def spread_fire(start_cell: Cell, cellIndex: int, iteration: int):
+    if iteration == 0:
         start_cell.setState(FireStatus.BURNING)
         burningQueue.append(cellIndex)
+        
 
     visited = []
 
     for i in range(len(cells)):
         rng = random.randint(0, 10000)
-        rng2 = random.randint(0, 9000)
-        # chance = random.randint(9990, 10000)
         # if rng >= chance:
-        if rng >= 9900:     # 0.1% chance
+        if rng >= 9950:     # 0.05% chance
             cell = cells[i]
 
             if i + 1 >= len(cells):
@@ -93,6 +95,7 @@ def spread_fire(start_cell: Cell, cellIndex: int):
             if cell.current_state == FireStatus.BURNING and not cell in visited:
                 if random.randint(0, 10000) >= random.randint(8000, 10000): 
                     cell.setState(FireStatus.BURNED)
+                    burnt_arr.append(cell)
                 
                 ran = random.randint(0, 150)
 
@@ -122,10 +125,14 @@ def spread_fire(start_cell: Cell, cellIndex: int):
             
 
 # drone = UAV()
+def game_over():
+    if len(burnt_arr) > 40: return True
+    else: return False
 
 iteration = 0
 rand_index = random.randint(0,81)
 while running:
+    screen.fill("black")
     # game logic
     cell_list.draw(screen)
     for event in pygame.event.get():
@@ -135,13 +142,13 @@ while running:
 
         keys = pygame.key.get_pressed()
 
-        if keys[pygame.K_s]:
+        if keys[pygame.K_s] and uav.y + 100 < height:
             uav.moveDown()
-        elif keys[pygame.K_w]:
+        elif keys[pygame.K_w] and uav.y - 100 > 0:
             uav.moveUp()
-        elif keys[pygame.K_a]:
+        elif keys[pygame.K_a] and uav.x - 100 > 0:
             uav.moveLeft()
-        elif keys[pygame.K_d]:
+        elif keys[pygame.K_d] and uav.x + 100 < width:
             uav.moveRight()
         uav_hitbox = uav.rect
         col_index = uav_hitbox.collidelist(hitboxes)
@@ -150,11 +157,21 @@ while running:
         if col_index >= 0:
             cells[col_index].setState(FireStatus.NOT_BURNED)
 
-        
+
+    spread_fire(cells[rand_index], 15, iteration)
     
-    spread_fire(cells[rand_index], 15)
-    
-    # refresh screen 60hz
+    iteration += 1
     uav_group.draw(screen)
+
+
+    # refresh screen 60hz
     clock.tick(60)
     pygame.display.flip()
+
+    if iteration > 10:
+        won = True
+        for tile in cells:
+            if tile.current_state == FireStatus.BURNING:
+                won = False
+    if won:
+        running = False
