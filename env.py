@@ -1,5 +1,4 @@
 import gym
-from assets.Cell import FireStatus
 
 class UAVAgent(gym.Env):
     def __init__(self, game) -> None:
@@ -22,7 +21,6 @@ class UAVAgent(gym.Env):
         self.game.init()
 
     def step(self, action):
-        reward = 0
         uav = self.game.uav
 
         if action == 0:
@@ -36,11 +34,5 @@ class UAVAgent(gym.Env):
 
         terminated = True
         truncated = False
-
-        for cell in self.game.cells:
-            if cell.state == FireStatus.BURNING:
-                reward = 0
-            if cell.state == FireStatus.NOT_BURNED:
-                terminated = False
-
-        return self._get_obs(), reward, terminated, truncated, {}  
+        
+        return self._get_obs(), self.game.getScore(), terminated, truncated, {}  

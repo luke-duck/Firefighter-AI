@@ -147,10 +147,15 @@ class Firefighter(PyGameWrapper):
                         visited.append(left)
                         self.score -= 50
                 
-
+    '''
+    100 red —> green
+    -50 green —> red
+    -100 red —> black
+    1,000 all green
+    '''
     def getScore(self):
         return self.score
-
+    
     def game_over(self):
         if len(self.burnt_arr) > 40: return True
         else: return False
